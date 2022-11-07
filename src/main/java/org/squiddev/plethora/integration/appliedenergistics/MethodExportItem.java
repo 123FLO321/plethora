@@ -56,6 +56,9 @@ public final class MethodExportItem {
 		IAEItemStack toExtract = baked.getTarget().copy();
 		toExtract.setStackSize(Math.min(limit, toExtract.getDefinition().getMaxStackSize()));
 		toExtract = storageGrid.getInventory(channel).extractItems(toExtract, Actionable.MODULATE, source);
+		if (toExtract == null) {
+			return 0;
+		}
 
 		// Attempt to insert into the appropriate inventory
 		ItemStack toInsert = toExtract.createItemStack();

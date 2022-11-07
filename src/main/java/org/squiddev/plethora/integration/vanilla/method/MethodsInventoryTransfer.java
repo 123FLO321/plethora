@@ -3,6 +3,8 @@ package org.squiddev.plethora.integration.vanilla.method;
 import dan200.computercraft.api.lua.LuaException;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -78,6 +80,20 @@ public final class MethodsInventoryTransfer {
 
 			if (object instanceof ICapabilityProvider) {
 				IItemHandler handler = ((ICapabilityProvider) object).getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
+				if (handler != null) return handler;
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
+	public static IFluidHandler extractFluidHandler(@Nonnull Object object) {
+		for (Object child : PlethoraAPI.instance().converterRegistry().convertAll(object)) {
+			if (child instanceof IFluidHandler) return (IFluidHandler) child;
+
+			if (object instanceof ICapabilityProvider) {
+				IFluidHandler handler = ((ICapabilityProvider) object).getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
 				if (handler != null) return handler;
 			}
 		}
