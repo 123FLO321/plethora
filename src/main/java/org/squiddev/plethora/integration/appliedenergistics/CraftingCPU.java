@@ -57,6 +57,11 @@ public class CraftingCPU {
 			jobData.put("finalOutput", MetaAppliedEnergistics.getItemStackProperties(finalOutput));
 		}
 
+		ICraftingLink link = cluster.getLastCraftingLink();
+		if (link != null) {
+			jobData.put("id", cluster.getLastCraftingLink().getCraftingID());
+		}
+
 		return jobData;
 	}
 }
