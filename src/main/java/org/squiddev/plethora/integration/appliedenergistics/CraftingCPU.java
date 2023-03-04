@@ -3,6 +3,7 @@ package org.squiddev.plethora.integration.appliedenergistics;
 import appeng.api.AEApi;
 import appeng.api.networking.crafting.CraftingItemList;
 import appeng.api.networking.crafting.ICraftingCPU;
+import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -40,6 +41,21 @@ public class CraftingCPU {
 		}
 
 		return listData;
+	}
+
+	public static boolean cancelJob(ICraftingCPU cpu, @Nullable String id) {
+		if (!(cpu instanceof CraftingCPUCluster)) return false;
+		CraftingCPUCluster cluster = (CraftingCPUCluster) cpu;
+
+		ICraftingLink link = cluster.getLastCraftingLink();
+		if (link == null) return false;
+
+		String currentId = link.getCraftingID();
+		if (id != null && !id.equals(currentId)) {
+			return false;
+		}
+		cluster.cancel();
+		return true;
 	}
 
 	@Nullable

@@ -117,6 +117,17 @@ public final class MethodsGrid {
 		return ContextHelpers.getMetaList(context, crafting.getCpus());
 	}
 
+	@PlethoraMethod(modId = AppEng.MOD_ID, doc = "-- Cancels the specified crafting task")
+	public static boolean cancelCraftingJob(IContext<IGrid> context, String id) {
+		ICraftingGrid crafting = context.getTarget().getCache(ICraftingGrid.class);
+		for (ICraftingCPU cpu : crafting.getCpus()) {
+			if (CraftingCPU.cancelJob(cpu, id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static IAEItemStack findStack(IGrid network, ItemFingerprint fingerprint) {
 		IItemStorageChannel channel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
 		IStorageGrid grid = network.getCache(IStorageGrid.class);

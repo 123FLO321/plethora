@@ -138,6 +138,14 @@ public class CraftingResult {
 		return link != null && link.isCanceled();
 	}
 
+	@PlethoraMethod(modId = AppEng.MOD_ID, doc = "-- Cancel this crafting task.")
+	public static boolean cancel(@FromTarget CraftingResult result) {
+		ICraftingLink link = result.getLink();
+		if (link == null) return false;
+		link.cancel();
+		return true;
+	}
+
 	@PlethoraMethod(modId = AppEng.MOD_ID, doc = "-- Get the status for this crafting task.")
 	public static String status(@FromTarget CraftingResult result) {
 		return result.getStatus();
