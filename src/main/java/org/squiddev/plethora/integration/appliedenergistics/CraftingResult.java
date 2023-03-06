@@ -33,14 +33,18 @@ public class CraftingResult {
 	private final IGrid grid;
 	private final IComputerAccess access;
 	private final IActionHost source;
+	private final boolean simulation;
+
+	private boolean calculated = false;
 
 	private ICraftingJob job = null;
 	private ICraftingLink link = null;
 
-	public CraftingResult(@Nonnull IGrid grid, @Nullable IComputerAccess access, @Nonnull IActionHost source) {
+	public CraftingResult(@Nonnull IGrid grid, @Nullable IComputerAccess access, @Nonnull IActionHost source, boolean simulation) {
 		this.grid = grid;
 		this.access = access;
 		this.source = source;
+		this.simulation = simulation;
 	}
 
 	public ICraftingCallback getCallback() {
@@ -62,16 +66,20 @@ public class CraftingResult {
 	}
 
 	public String getStatus() {
-		if (job != null && job.isSimulation()) return "missing";
-
-		if (link == null) {
+		if (job != null && job.isSimulation()) {
+			return "missing";
+		} else if (!calculated) {
 			return "pending";
+		} else if (link == null && simulation) {
+			return "simulated";
+		} else if (link == null) {
+			return "unknown";
 		} else if (link.isCanceled()) {
 			return "canceled";
 		} else if (link.isDone()) {
 			return "finished";
 		} else {
-			return "unknown";
+			return "running";
 		}
 	}
 
@@ -87,8 +95,11 @@ public class CraftingResult {
 			if (job.isSimulation()) {
 				tryQueue(null, "missing");
 			} else {
-				ICraftingGrid crafting = grid.getCache(ICraftingGrid.class);
-				link = crafting.submitJob(job, this, null, false, new MachineSource(source));
+				if (!simulation) {
+					ICraftingGrid crafting = grid.getCache(ICraftingGrid.class);
+					link = crafting.submitJob(job, this, null, false, new MachineSource(source));
+				}
+				calculated = true;
 			}
 		}
 

@@ -32,7 +32,8 @@ public final class MethodCraftItem {
 	)
 	public static TypedLuaObject<CraftingResult> craft(
 		IContext<IAEItemStack> context, @FromContext IGridNode node, @FromContext IActionHost host,
-		int quantity
+		int quantity,
+		@Optional(defBool = false) boolean simulation
 	) {
 		IGrid grid = node.getGrid();
 		ICraftingGrid crafting = grid.getCache(ICraftingGrid.class);
@@ -41,7 +42,7 @@ public final class MethodCraftItem {
 		toCraft.setStackSize(quantity);
 
 		IComputerAccess computer = context.getContext(ContextKeys.COMPUTER, IComputerAccess.class);
-		CraftingResult result = new CraftingResult(grid, computer, host, virtual);
+		CraftingResult result = new CraftingResult(grid, computer, host, simulation);
 		IActionSource source = new PlayerSource(new FakePlayer((WorldServer) host.getActionableNode().getWorld(), PlethoraFakePlayer.PROFILE), host);
 		crafting.beginCraftingJob(node.getWorld(), grid, source, toCraft, result.getCallback());
 
