@@ -197,7 +197,8 @@ public class CraftingResult {
 			if (extracted != null) missing -= extracted.getStackSize();
 
 			component.put("missing", missing);
-			component.put("toCraft", needed.getStackSize());
+			component.put("available", needed.getStackSize());
+			component.put("toCraft", needed.getCountRequestable());
 			component.put("component", context.makePartialChild(needed).getMeta());
 
 			out.put(++i, component);
