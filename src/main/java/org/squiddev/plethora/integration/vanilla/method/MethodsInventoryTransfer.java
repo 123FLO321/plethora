@@ -34,13 +34,7 @@ public final class MethodsInventoryTransfer {
 		String toName, int fromSlot, @Optional(defInt = Integer.MAX_VALUE) int limit, @Optional int toSlot
 	) throws LuaException {
 		IItemHandler from = context.getTarget();
-
-		// Find location to transfer to
-		Object location = context.getTransferLocation(toName);
-		if (location == null) throw new LuaException("Target '" + toName + "' does not exist");
-
-		IItemHandler to = extractHandler(location);
-		if (to == null) throw new LuaException("Target '" + toName + "' is not an inventory");
+		IItemHandler to = getHandlerFor(context, toName);
 
 		// Validate slots
 		if (limit <= 0) throw new LuaException("Limit must be > 0");
@@ -57,13 +51,7 @@ public final class MethodsInventoryTransfer {
 		String fromName, int fromSlot, @Optional(defInt = Integer.MAX_VALUE) int limit, @Optional int toSlot
 	) throws LuaException {
 		IItemHandler to = context.getTarget();
-
-		// Find location to transfer to
-		Object location = context.getTransferLocation(fromName);
-		if (location == null) throw new LuaException("Source '" + fromName + "' does not exist");
-
-		IItemHandler from = extractHandler(location);
-		if (from == null) throw new LuaException("Source '" + fromName + "' is not an inventory");
+		IItemHandler from = getHandlerFor(context, fromName);
 
 		// Validate slots
 		if (limit <= 0) throw new LuaException("Limit must be > 0");
@@ -102,6 +90,23 @@ public final class MethodsInventoryTransfer {
 	}
 
 	/**
+	 * Gets the handler in a given direction for a context
+	 * @param context The context to get the handler for
+	 * @param direction The direction to get the handler for
+	 * @return The handler in the given direction
+	 */
+	public static IItemHandler getHandlerFor(IContext<?> context, String direction) throws LuaException {
+		// Find location to transfer to
+		Object location = context.getTransferLocation(direction);
+		if (location == null) throw new LuaException("Target '" + direction + "' does not exist");
+
+		IItemHandler to = extractHandler(location);
+		if (to == null) throw new LuaException("Target '" + direction + "' is not an inventory");
+
+		return to;
+	}
+
+	/**
 	 * Move an item from one handler to another
 	 *
 	 * @param from     The handler to move from
@@ -111,7 +116,7 @@ public final class MethodsInventoryTransfer {
 	 * @param limit    The max number to move. {@link Integer#MAX_VALUE} for no limit.
 	 * @return The actual number moved
 	 */
-	private static int moveItem(IItemHandler from, int fromSlot, IItemHandler to, int toSlot, final int limit) {
+	public static int moveItem(IItemHandler from, int fromSlot, IItemHandler to, int toSlot, final int limit) {
 		// See how much we can get out of this slot
 		ItemStack extracted = from.extractItem(fromSlot, limit, true);
 		if (extracted.isEmpty()) return 0;
