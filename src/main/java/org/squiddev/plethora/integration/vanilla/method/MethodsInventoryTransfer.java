@@ -117,6 +117,15 @@ public final class MethodsInventoryTransfer {
 	 * @return The actual number moved
 	 */
 	public static int moveItem(IItemHandler from, int fromSlot, IItemHandler to, int toSlot, final int limit) {
+		return moveItemWithCallback(from, fromSlot, limit, stack -> toSlot < 0 ? ItemHandlerHelper.insertItem(to, stack, false) : to.insertItem(toSlot, stack, false));
+	}
+
+	/**
+	 * Same as {@link #moveItem(IItemHandler, int, IItemHandler, int, int)} but allows you to specify a callback
+	 * @param callback The callback to use for insertion
+	 * @return The actual number moved
+	 */
+	public static int moveItemWithCallback(IItemHandler from, int fromSlot, final int limit, IItemHandlerCallback callback) {
 		// See how much we can get out of this slot
 		ItemStack extracted = from.extractItem(fromSlot, limit, true);
 		if (extracted.isEmpty()) return 0;
@@ -126,7 +135,7 @@ public final class MethodsInventoryTransfer {
 		extracted.setCount(extractCount);
 
 		// Insert into the new handler
-		ItemStack remainder = toSlot < 0 ? ItemHandlerHelper.insertItem(to, extracted, false) : to.insertItem(toSlot, extracted, false);
+		ItemStack remainder = callback.insertItem(extracted);
 
 		// Calculate the amount which was inserted.
 		int insertCount = remainder.isEmpty() ? extractCount : extractCount - remainder.getCount();
@@ -135,5 +144,9 @@ public final class MethodsInventoryTransfer {
 		from.extractItem(fromSlot, insertCount, false);
 
 		return insertCount;
+	}
+
+	public interface IItemHandlerCallback {
+		ItemStack insertItem(ItemStack stack);
 	}
 }
