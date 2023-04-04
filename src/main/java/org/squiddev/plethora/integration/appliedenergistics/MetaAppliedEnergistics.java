@@ -7,6 +7,7 @@ import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AppEng;
+import dan200.computercraft.api.lua.LuaException;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import org.squiddev.plethora.api.Injects;
@@ -34,7 +35,11 @@ public final class MetaAppliedEnergistics {
 		out.put("busy", cpu.isBusy());
 		out.put("coprocessors", cpu.getCoProcessors());
 		out.put("storage", cpu.getAvailableStorage());
-		if (cpu.isBusy()) out.put("job", CraftingCPU.getCurrentJob(cpu));
+		try {
+			if (cpu.isBusy()) out.put("job", CraftingCPU.getCurrentJob(cpu));
+		} catch (LuaException e) {
+			e.printStackTrace();
+		}
 
 		return out;
 	};

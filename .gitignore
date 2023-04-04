@@ -68,6 +68,7 @@ $RECYCLE.BIN/
 /.gradle
 /build/
 /run/
+/runserver/
 !gradle/wrapper/gradle-wrapper.jar
 
 # Idea

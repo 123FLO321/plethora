@@ -1,18 +1,13 @@
 package org.squiddev.plethora.integration.appliedenergistics;
 
-import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.*;
 import appeng.api.networking.security.IActionHost;
-import appeng.api.networking.security.IActionSource;
-import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
 import appeng.core.AppEng;
+import appeng.crafting.CraftingJob;
 import appeng.me.helpers.MachineSource;
 import com.google.common.collect.ImmutableSet;
 import dan200.computercraft.api.lua.LuaException;
@@ -24,7 +19,6 @@ import org.squiddev.plethora.integration.PlethoraIntegration;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 
 public class CraftingResult {
@@ -169,41 +163,12 @@ public class CraftingResult {
 	}
 
 	@PlethoraMethod(modId = AppEng.MOD_ID, doc = "-- Get the various items required for this task.")
-	public static Map<Integer, ?> getComponents(IContext<CraftingResult> context) throws LuaException {
+	public static Map<String, Object> getTree(IContext<CraftingResult> context) throws LuaException {
 		CraftingResult result = context.getTarget();
 
-		ICraftingJob job = result.getJob();
+		CraftingJob job = (CraftingJob) result.getJob();
 		if (job == null) throw new LuaException("Task is still pending");
 
-		IItemStorageChannel channel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
-		IItemList<IAEItemStack> plan = channel.createList();
-		job.populatePlan(plan);
-
-		IStorageGrid storage = result.grid.getCache(IStorageGrid.class);
-		IMEMonitor<IAEItemStack> monitor = storage.getInventory(channel);
-		IActionSource source = new MachineSource(result.source);
-
-		int i = 0;
-		Map<Integer, Map<String, Object>> out = new HashMap<>(plan.size());
-		for (IAEItemStack needed : plan) {
-			Map<String, Object> component = new HashMap<>();
-
-			IAEItemStack toExtract = needed.copy();
-			toExtract.reset();
-			toExtract.setStackSize(needed.getStackSize());
-
-			long missing = needed.getStackSize();
-			IAEItemStack extracted = monitor.extractItems(toExtract, Actionable.SIMULATE, source);
-			if (extracted != null) missing -= extracted.getStackSize();
-
-			component.put("missing", missing);
-			component.put("available", needed.getStackSize());
-			component.put("toCraft", needed.getCountRequestable());
-			component.put("component", context.makePartialChild(needed).getMeta());
-
-			out.put(++i, component);
-		}
-
-		return out;
+		return CraftingJobUtils.mapJob(job, null);
 	}
 }

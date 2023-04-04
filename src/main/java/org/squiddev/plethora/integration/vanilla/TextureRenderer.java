@@ -30,7 +30,6 @@ public class TextureRenderer {
 			try {
 				BufferedImage bufferedImage = renderStack(stack, scale);
 				String base64 = encodeImage(bufferedImage);
-				// System.out.println(base64);
 				futureResult.complete(base64);
 			} catch (Exception e) {
 				futureResult.completeExceptionally(e);

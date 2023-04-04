@@ -6,9 +6,11 @@ buildscript {
 			name = "forge"
 			url = "http://files.minecraftforge.net/maven"
 		}
+		maven { url = 'https://repo.spongepowered.org/maven' }
 	}
 	dependencies {
 		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3.4'
+		classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
 	}
 }
 
@@ -20,6 +22,7 @@ plugins {
 buildDir = "build"
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
 
 version = mc_version + "-" + mod_version
 group = "org.squiddev"
@@ -78,6 +81,7 @@ repositories {
 
 dependencies {
 	deobfCompile "curse.maven:cc-tweaked-282001:${cct_version_id}"
+	deobfCompile "curse.maven:mixin-booter-419286:4090558"
 
 	compile "mezz.jei:jei_1.12.2:4.15.0.268"
 
@@ -179,6 +183,12 @@ curseforge {
 		 relations {
 			 requiredLibrary 'cc-tweaked'
 		 }
+	}
+}
+
+sourceSets {
+	main {
+		ext.refMap = "mixins.plethora.refmap.json"
 	}
 }
 

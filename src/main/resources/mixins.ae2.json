@@ -1,0 +1,13 @@
+{
+	"package": "org.squiddev.plethora.integration.appliedenergistics.mixins",
+	"refmap": "mixins.plethora.refmap.json",
+	"target": "@env(DEFAULT)",
+	"minVersion": "0.8",
+	"compatibilityLevel": "JAVA_8",
+	"mixins": [
+		"CraftingCPUClusterMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
