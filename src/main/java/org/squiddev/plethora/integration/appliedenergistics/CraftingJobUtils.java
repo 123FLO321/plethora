@@ -73,18 +73,38 @@ public class CraftingJobUtils {
 		}
 	}
 
-	private static CraftingTree buildNodeTree(CraftingTreeNode parent, IItemList<IAEItemStack> activeList, IItemList<IAEItemStack> pendingList, Map<ICraftingPatternDetails, TaskProgress> tasks) throws IllegalAccessException, NoSuchFieldException {
+	@Nullable
+	private static CraftingTree buildNodeTree(CraftingJob job, CraftingTreeNode parent, IItemList<IAEItemStack> activeList, IItemList<IAEItemStack> pendingList, Map<ICraftingPatternDetails, TaskProgress> tasks) throws IllegalAccessException, NoSuchFieldException {
 		Field nodesField = CraftingTreeNode.class.getDeclaredField("nodes");
 		nodesField.setAccessible(true);
 		ArrayList<CraftingTreeProcess> nodes = (ArrayList<CraftingTreeProcess>) nodesField.get(parent);
 
+		// TODO: maybe load all outputs and not only the required ones
 		Field whatField = CraftingTreeNode.class.getDeclaredField("what");
 		whatField.setAccessible(true);
-		AEItemStack what = (AEItemStack) whatField.get(parent);
+		AEItemStack what = (AEItemStack) ((AEItemStack) whatField.get(parent)).copy();
+
+		if (!nodes.isEmpty()) what.setStackSize(0);
+		for (CraftingTreeProcess node : nodes) {
+			Field defailsField = CraftingTreeProcess.class.getDeclaredField("details");
+			defailsField.setAccessible(true);
+			ICraftingPatternDetails details = (ICraftingPatternDetails) defailsField.get(node);
+
+			Field craftsField = CraftingTreeProcess.class.getDeclaredField("crafts");
+			craftsField.setAccessible(true);
+			long crafts = (long) craftsField.get(node);
+
+			for (IAEItemStack output : details.getOutputs()) {
+				if (output.equals(what)) what.incStackSize(output.getStackSize() * crafts);
+			}
+		}
 
 		Field missingField = CraftingTreeNode.class.getDeclaredField("missing");
 		missingField.setAccessible(true);
 		long missing = (long) missingField.get(parent);
+		what.incStackSize(missing);
+
+		if (what.getStackSize() == 0) return null;
 
 		IAEItemStack activeStack = activeList.findPrecise(what);
 		long active = Math.min(activeStack == null ? 0 : activeStack.getStackSize(), what.getStackSize() - missing);
@@ -99,17 +119,21 @@ public class CraftingJobUtils {
 		for (CraftingTreeProcess node : nodes) {
 			CraftingTreeNode[] children = getTreeNodes(node);
 			if (children.length > 0) {
-				tree.addChild(buildProcessTree(node, children, activeList, pendingList, tasks));
+				CraftingTree.CraftingTreeProcess processTree = buildProcessTree(job, node, children, activeList, pendingList, tasks);
+				if (processTree != null) tree.addChild(processTree);
 			}
 		}
 
 		return tree;
 	}
 
-	private static CraftingTree.CraftingTreeProcess buildProcessTree(CraftingTreeProcess node, CraftingTreeNode[] children, IItemList<IAEItemStack> activeList, IItemList<IAEItemStack> pendingList, Map<ICraftingPatternDetails, TaskProgress> tasks) throws NoSuchFieldException, IllegalAccessException {
+	@Nullable
+	private static CraftingTree.CraftingTreeProcess buildProcessTree(CraftingJob job, CraftingTreeProcess node, CraftingTreeNode[] children, IItemList<IAEItemStack> activeList, IItemList<IAEItemStack> pendingList, Map<ICraftingPatternDetails, TaskProgress> tasks) throws NoSuchFieldException, IllegalAccessException {
 		Field craftsField = CraftingTreeProcess.class.getDeclaredField("crafts");
 		craftsField.setAccessible(true);
 		long crafts = (long) craftsField.get(node);
+
+		if (crafts == 0) return null;
 
 		Field detailsField = CraftingTreeProcess.class.getDeclaredField("details");
 		detailsField.setAccessible(true);
@@ -122,8 +146,8 @@ public class CraftingJobUtils {
 		CraftingTree.CraftingTreeProcess processTree = new CraftingTree.CraftingTreeProcess(crafts, pending);
 
 		for (CraftingTreeNode child : children) {
-			CraftingTree childTree = buildNodeTree(child, activeList, pendingList, tasks);
-			processTree.addChild(childTree);
+			CraftingTree childTree = buildNodeTree(job, child, activeList, pendingList, tasks);
+			if (childTree != null) processTree.addChild(childTree);
 		}
 		return processTree;
 	}
@@ -237,11 +261,11 @@ public class CraftingJobUtils {
 			if (job == null && cluster != null) {
 				tree = buildFlatTree(cluster, activeList, pendingList);
 			} else if (job != null) {
-				tree = buildNodeTree(job.getTree(), activeList, pendingList, tasks);
+				tree = buildNodeTree(job, job.getTree(), activeList, pendingList, tasks);
 			} else {
 				throw new LuaException("Either job or cluster must be provided");
 			}
-			return mapNodeTree(tree);
+			return tree != null ? mapNodeTree(tree) : null;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new LuaException("Failed to get job");
